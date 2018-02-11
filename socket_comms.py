@@ -2,11 +2,9 @@ import bluetooth
 import socket
 import threading
 import time
+import serial
 
 def start_tcp_server(bind_ip, bind_port):
-    # bind_ip = "0.0.0.0"
-    # bind_port = 9999
-
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bind_ip, bind_port))
     server_socket.listen(5)  # max backlog of connections
@@ -87,10 +85,11 @@ def start_bt_server(channel):
 if __name__ == "__main__":
     global running
     running = True
-    t1 = threading.Thread(target=start_bt_server, args=(10,))
+    t1 = threading.Thread(target=start_bt_server, args=(
+        10,))  # channel 4 | 10 for testing
     t1.start()
     t2 = threading.Thread(target=start_tcp_server, args=(
-        "10.42.0.102", 69))  # 192.168.2.1
+        "0.0.0.0", 69))  # 192.168.2.1 | 10.42.0.102
     t2.start()
     try:
         time.sleep(1)
@@ -100,4 +99,3 @@ if __name__ == "__main__":
         running = False
     t1.join()
     t2.join()
-
