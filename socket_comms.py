@@ -4,10 +4,11 @@ import threading
 import time
 import serial
 
+
 def start_tcp_server(bind_ip, bind_port):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bind_ip, bind_port))
-    server_socket.listen(5)  # max backlog of connections
+    server_socket.listen(1)  # max backlog of connections
 
     print("Listening on {}:{}".format(bind_ip, bind_port))
 
@@ -26,10 +27,15 @@ def start_tcp_server(bind_ip, bind_port):
                     print("TCP disconnected")
                     break
                 global bt_client_socket
+                global serial_client
                 try:
                     bt_client_socket.send(data)
                 except:
                     print("Bluetooth sending error")
+                try:
+                    serial_client.send(data)
+                except:
+                    print("Serial sending error")
         except:
             tcp_client_socket.close()
             print("TCP disconnected")
@@ -70,16 +76,63 @@ def start_bt_server(channel):
                     print("Bluetooth disconnected")
                     break
                 global tcp_client_socket
+                global serial_client
                 try:
                     tcp_client_socket.send(data)
                 except:
                     print("TCP sending error")
+                try:
+                    serial_client.send(data)
+                except:
+                    print("Serial sending error")
         except IOError:
             bt_client_socket.close()
             print("Bluetooth disconnected")
 
     server_sock.close()
     print("Bluetooth server stopped")
+
+
+def start_serial_client(port_name, baud_rate):
+
+    global running
+    while running:
+        global serial_client
+        connected = False
+        while not connected:
+            try:
+                serial_client = serial.Serial(port_name, baud_rate, timeout=0)
+                print("Connected to {}:{}".format(port_name, baud_rate))
+                connected = True
+            except:
+                connected = False
+
+        try:
+            while running:
+                data = serial_client.readline()
+                if len(data) == 0:
+                    serial_client.close()
+                    connected = False
+                    print("Serial client disconnected")
+                    break
+                global tcp_client_socket
+                global bt_client_socket
+                try:
+                    tcp_client_socket.send(data)
+                except:
+                    print("TCP sending error")
+                try:
+                    bt_client_socket.send(data)
+                except:
+                    print("Bluetooth sending error")
+        except:
+            serial_client.close()
+            connected = False
+            print("Serial client disconnected")
+
+    serial_client.close()
+    connected = False
+    print("Serial client disconnected")
 
 
 if __name__ == "__main__":
@@ -91,6 +144,9 @@ if __name__ == "__main__":
     t2 = threading.Thread(target=start_tcp_server, args=(
         "0.0.0.0", 69))  # 192.168.2.1 | 10.42.0.102
     t2.start()
+    t3 = threading.Thread(target=start_serial_client, args=(
+        "/dev/ttyACM0", 9600)) # port name, data rate
+    t3.start()
     try:
         time.sleep(1)
         raw_input("Press enter to quit \n")
@@ -99,3 +155,4 @@ if __name__ == "__main__":
         running = False
     t1.join()
     t2.join()
+    t3.join()
