@@ -6,7 +6,7 @@ class BTServer():
     def __init__(self, channel, buffer_size=1024):
         self.channel = channel
         self.buffer_size = buffer_size
-        self.server_socket = bluetooth.bluetoothSocket(bluetooth.RFCOMM)
+        self.server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
     def run(self):
         self.server_socket.bind(("", self.channel))

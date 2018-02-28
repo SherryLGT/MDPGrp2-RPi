@@ -6,16 +6,10 @@ from tcp_server import TCPServer
 from bt_server import BTServer
 from serial_client import SerialClient
 
-pc_queue = Queue.Queue()
-android_queue = Queue.Queue()
-arduino_queue = Queue.Queue()
 
-
-def run_tcp_server(ip, port):
+def run_tcp_server(ip, port, android_queue, arduino_queue):
     global running
     global pc_conn
-    global android_queue
-    global arduino_queue
     pc_conn = TCPServer(ip, port)
     pc_conn.run()
     while running:
@@ -32,11 +26,9 @@ def run_tcp_server(ip, port):
     pc_conn.close_server()
 
 
-def run_bt_server(channel):
+def run_bt_server(channel, pc_queue, arduino_queue):
     global running
     global android_conn
-    global pc_queue
-    global arduino_queue
     android_conn = BTServer(channel)
     android_conn.run()
     while running:
@@ -53,10 +45,9 @@ def run_bt_server(channel):
     android_conn.close_server()
 
 
-def run_serial_client(port, baud_rate):
+def run_serial_client(port, baud_rate, pc_queue):
     global running
     global arduino_conn
-    global pc_queue
     arduino_conn = SerialClient(port, baud_rate)
     while running:
         connected = False
@@ -70,28 +61,25 @@ def run_serial_client(port, baud_rate):
         arduino_conn.close_conn()
 
 
-def send_tcp_server():
+def send_tcp_server(pc_queue):
     global running
     global pc_conn
-    global pc_queue
     while running:
         if not pc_queue.empty():
             pc_conn.send(pc_queue.get())
 
 
-def send_bt_server():
+def send_bt_server(android_queue):
     global running
     global android_conn
-    global android_queue
     while running:
         if not android_queue.empty():
             android_conn.send(android_queue.get())
 
 
-def send_serial_client():
+def send_serial_client(arduino_queue):
     global running
     global arduino_conn
-    global arduino_queue
     while running:
         if not arduino_queue.empty():
             arduino_conn.send(arduino_queue.get())
@@ -100,15 +88,18 @@ def send_serial_client():
 if __name__ == "__main__":
     global running
     running = True
-    t1 = threading.Thread(target=run_bt_server, args=(4,)
+    pc_queue = Queue.Queue()
+    android_queue = Queue.Queue()
+    arduino_queue = Queue.Queue()
+    t1 = threading.Thread(target=run_bt_server, args=(10, pc_queue, arduino_queue)
                           )  # channel 4 | 10 for testing
     t2 = threading.Thread(target=run_tcp_server,
-                          args=("0.0.0.0", 22))  # 192.168.2.1
+                          args=("0.0.0.0", 99, android_queue, arduino_queue))  # 192.168.2.1
     t3 = threading.Thread(target=run_serial_client,
-                          args=("/dev/ttyACM0", 9600))
-    t4 = threading.Thread(target=send_bt_server)
-    t5 = threading.Thread(target=send_tcp_server)
-    t6 = threading.Thread(target=send_serial_client)
+                          args=("/dev/ttyACM0", 9600, pc_queue))
+    t4 = threading.Thread(target=send_bt_server, args=(android_queue,))
+    t5 = threading.Thread(target=send_tcp_server, args=(pc_queue,))
+    t6 = threading.Thread(target=send_serial_client, args=(arduino_queue,))
     t1.start()  # bluetooth server listening thread
     t2.start()  # tcp server listening thread
     t3.start()  # serial client listening thread
