@@ -21,6 +21,7 @@ class SerialClient():
     def recv(self):
         try:
             data = self.client_conn.readline()
+            # data = self.client_conn.read() # for testing
         except:
             return None
         if not data:
@@ -31,7 +32,8 @@ class SerialClient():
 
     def send(self, data):
         try:
-            self.client_conn.send((data+"\n").encode('utf-8'))
+            self.client_conn.write(str(data+"\n").encode('utf-8'))
+            # self.client_conn.write(str(data).encode('utf-8')) # for testing
             print("[SerialClient] - Sent data: {}".format(data))
         except:
             print("[SerialClient] - Error sending data: {}".format(data))
