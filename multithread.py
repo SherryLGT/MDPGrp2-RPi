@@ -73,7 +73,7 @@ def send_serial_client(running, arduino_conn, arduino_queue):
 if __name__ == "__main__":
     running = True
     pc_conn = TCPServer("0.0.0.0", 99)  # ip, port
-    android_conn = BTServer(10)  # channel 4 | 10 for testing
+    android_conn = BTServer(4)  # channel 4 | 10 for testing
     arduino_conn = SerialClient("/dev/ttyACM0", 9600) # port, baud rate
     pc_queue = Queue.Queue()
     android_queue = Queue.Queue()
