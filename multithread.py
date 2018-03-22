@@ -12,13 +12,15 @@ def run_tcp_server(running, pc_conn, android_queue, arduino_queue):
     while running:
         pc_conn.accept()
         while running:
-            data = pc_conn.recv()
-            if data is None:
-                break
-            if data[0] == "#":  # change to decided message
-                android_queue.put(data)
-            else:
-                arduino_queue.put(data)
+            msg = pc_conn.recv()
+            datas = msg.splitlines()
+            for data in datas:
+                if data is None:
+                    break
+                if data[0] == "#":
+                    android_queue.put(data)
+                else:
+                    arduino_queue.put(data)
         pc_conn.close_client()
     pc_conn.close_server()
 
@@ -28,13 +30,15 @@ def run_bt_server(running, android_conn, pc_queue, arduino_queue):
     while running:
         android_conn.accept()
         while running:
-            data = android_conn.recv()
-            if data is None:
-                break
-            if data[0] == "#":  # change to decided message
-                pc_queue.put(data)
-            else:
-                arduino_queue.put(data)
+            msg = android_conn.recv()
+            datas = msg.splitlines()
+            for data in datas:
+                if data is None:
+                    break
+                if data[0] == "#":
+                    pc_queue.put(data)
+                else:
+                    arduino_queue.put(data)
         android_conn.close_client()
     android_conn.close_server()
 
@@ -45,10 +49,12 @@ def run_serial_client(running, arduino_conn, pc_queue):
         while not connected and running:
             connected = arduino_conn.connect()
         while running:
-            data = arduino_conn.recv()
-            if data is None:
-                break
-            pc_queue.put(data)
+            msg = arduino_conn.recv()
+            datas = msg.splitlines()
+            for data in datas:
+                if data is None:
+                    break
+                pc_queue.put(data)
         arduino_conn.close_conn()
 
 

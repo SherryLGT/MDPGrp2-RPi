@@ -33,7 +33,7 @@ class TCPServer():
 
     def send(self, data):
         try:
-            self.client_conn.send(data.encode('utf-8'))
+            self.client_conn.send((data+"\r\n").encode('utf-8'))
             print("[TCPServer] - Sent data: {}".format(data))
         except:
             print("[TCPServer] - Error sending data: {}".format(data))
