@@ -13,10 +13,12 @@ def run_tcp_server(running, pc_conn, android_queue, arduino_queue):
         pc_conn.accept()
         while running:
             msg = pc_conn.recv()
+            if msg is None:
+                break
+            if len(msg) == 0:
+                continue
             datas = msg.splitlines()
             for data in datas:
-                if data is None:
-                    break
                 if data[0] == "#":
                     android_queue.put(data)
                 else:
@@ -31,10 +33,12 @@ def run_bt_server(running, android_conn, pc_queue, arduino_queue):
         android_conn.accept()
         while running:
             msg = android_conn.recv()
+            if msg is None:
+                break
+            if len(msg) == 0:
+                continue
             datas = msg.splitlines()
             for data in datas:
-                if data is None:
-                    break
                 if data[0] == "#":
                     pc_queue.put(data)
                 else:
@@ -50,10 +54,12 @@ def run_serial_client(running, arduino_conn, pc_queue):
             connected = arduino_conn.connect()
         while running:
             msg = arduino_conn.recv()
+            if msg is None:
+                break
+            if len(msg) == 0:
+                continue
             datas = msg.splitlines()
             for data in datas:
-                if data is None:
-                    break
                 pc_queue.put(data)
         arduino_conn.close_conn()
 
